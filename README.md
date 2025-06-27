@@ -11,10 +11,104 @@ To run the tests, you can use the `run_single_measurement.sh` script. This scrip
   --spring-boot-version 3.3.1 \
   --jvm-version 21.0.4-tem \
   --java-version 21 \
+  --virtual-threads "false"
   --webserver tomcat
 ```
 
-Note that not all combinations of Spring Boot versions, JVM versions, Java versions, and web servers are supported.
+Note that not all combinations of Spring Boot versions, JVM versions, Java versions, and web servers are supported by the script (e.g., not all JVMs support virtual threads).
+
+## Setup Instructions on Linux
+
+Follow these steps to prepare a Ubuntu 24.04 machine:
+
+```
+sudo apt-get install unzip zip sysfsutils docker.io
+docker ps
+sudo systemctl status docker
+sudo gpasswd -a ubuntu docker
+newgrp docker
+
+curl -s "https://get.sdkman.io" | bash
+source "/home/ubuntu/.sdkman/bin/sdkman-init.sh"
+
+sdk install java 23.0.1-tem 
+sdk install java 21.0.5-tem 
+sdk install java 17.0.13-tem # set this as default when asked
+
+git clone https://github.com/joular/joularjx.git
+cd joularjx/
+./mvnw package
+
+cd 
+git clone https://github.com/spring-petclinic/spring-petclinic-rest.git
+cd spring-petclinic-rest/
+git reset --hard b4c7dd5713dbaaa12742d785f1bab28e7707e186
+
+cd
+git clone https://github.com/misto/spring-petclinic-energy-benchmarking.git
+
+wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
+tar -xvzf apache-jmeter-5.6.3.tgz 
+
+echo 'export JMETER_HOME=/home/ubuntu/apache-jmeter-5.6.3' | tee -a .bashrc 
+echo 'export PATH=$JMETER_HOME/bin:$PATH' | tee -a .bashrc 
+
+source ~/.bashrc
+jmeter --version # should print 5.6.3
+
+echo 'mode class/powercap/intel-rapl:0/energy_uj = 0440' | sudo tee -a  /etc/sysfs.conf
+echo 'owner class/powercap/intel-rapl:0/energy_uj = root:ubuntu' | sudo tee -a  /etc/sysfs.conf
+
+sudo reboot
+
+cd spring-petclinic-energy-benchmarking/
+
+screen
+
+./run_series.sh 
+```
+
+## Setup Instructions on macOS
+
+Follow these steps to prepare a macOS machine (e.g. Mac mini):
+
+Install Docker Desktop.
+
+```
+curl -s "https://get.sdkman.io" | bash
+source "/Users/m1/.sdkman/bin/sdkman-init.sh"
+
+sdk install java 23.0.1-tem 
+sdk install java 21.0.5-tem 
+sdk install java 17.0.13-tem
+
+git clone https://github.com/joular/joularjx.git
+cd joularjx/
+./mvnw package
+
+cd 
+git clone https://github.com/spring-petclinic/spring-petclinic-rest.git
+cd spring-petclinic-rest/
+git reset --hard b4c7dd5713dbaaa12742d785f1bab28e7707e186
+
+cd
+git clone https://github.com/misto/spring-petclinic-energy-benchmarking.git
+
+curl https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz -o apache-jmeter-5.6.3.tgz
+tar -xvzf apache-jmeter-5.6.3.tgz 
+
+echo 'export JMETER_HOME=/Users/m1/apache-jmeter-5.6.3' | tee -a ~/.zshrc
+echo 'export PATH=$JMETER_HOME/bin:$PATH' | tee -a ~/.zshrc 
+
+source ~/.zshrc
+jmeter --version # should print 5.6.3
+
+cd spring-petclinic-energy-benchmarking/
+
+screen
+
+./run_series.sh 
+```
 
 ## Running the Tests on Windows
 
@@ -60,7 +154,7 @@ java -javaagent:/path/to/joularjx/target/*.jar \
 -jar /path/to/spring-petclinic-rest/target/*.jar
 ```
 
-Make sure jmeter is added to the PATH or provide the path in the command, run the JMeter Tests in a separate Shell.
+Make sure JMeter is added to the PATH or provide the path in the command, run the JMeter Tests in a separate Shell.
 
 ```bash
 jmeter -n -t /path/to/spring-petclinic-energy-benchmarking/jmeter-petclinic-server.jmx \
@@ -72,3 +166,4 @@ JMeter automatically terminates when the test run is completed.
 Terminate the PetClinic application with `CTRL + C`, wait for the application to terminate.
 Be Aware that the script for Linux copies the Output files to a specific Folder , this is not the case for Windows.
 Copy the application log from the first shell and paste it in a separate log file to store it. 
+Note that not all combinations of Spring Boot versions, JVM versions, Java versions, and web servers are supported.
