@@ -37,6 +37,7 @@ sdk install java 17.0.13-tem # set this as default when asked
 
 git clone https://github.com/joular/joularjx.git
 cd joularjx/
+git reset --hard 3.0.1
 ./mvnw package
 
 cd 
