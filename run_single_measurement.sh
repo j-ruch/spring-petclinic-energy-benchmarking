@@ -2,18 +2,22 @@
 
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-APP_HOME="$HOME/spring-petclinic-rest"
+WORKSPACE="$HOME/workspace"
 
-JMETER_CONFIG="$HOME/spring-petclinic-energy-benchmarking/jmeter-petclinic-server.jmx"
+APP_HOME="$WORKSPACE/spring-petclinic-rest"
 
-JOULARJX_CONFIG="$HOME/spring-petclinic-energy-benchmarking/config.properties"
+JMETER_CONFIG="$WORKSPACE/spring-petclinic-energy-benchmarking/jmeter-petclinic-server.jmx"
 
-BENCHMARK_DATA="$HOME/spring-petclinic-energy-benchmarking/benchmark-ddl-and-data.sql"
+JOULARJX_CONFIG="$WORKSPACE/spring-petclinic-energy-benchmarking/config.properties"
+
+FLAMEGRAPH_HOME="$WORKSPACE/FlameGraph"
+
+BENCHMARK_DATA="$WORKSPACE/spring-petclinic-energy-benchmarking/benchmark-ddl-and-data.sql"
 
 APP_RUN_IDENTIFIER="$(date +%Y-%m-%d_%H-%M-%S)"
-OUTPUT_FOLDER="$HOME/spring-petclinic-energy-benchmarking/out/$APP_RUN_IDENTIFIER"
+OUTPUT_FOLDER="$WORKSPACE/spring-petclinic-energy-benchmarking/out/$APP_RUN_IDENTIFIER"
 
-JAVA_OPTS="-javaagent:$HOME/joularjx/target/joularjx-3.0.1.jar -Djoularjx.config=$JOULARJX_CONFIG -Dspring.sql.init.mode=never -Dspring.profiles.active=mysql,jpa -Dserver.servlet.context-path=/ -Dspring.datasource.username=root -Dspring.datasource.password=petclinic"
+JAVA_OPTS="-javaagent:$WORKSPACE/joularjx/target/joularjx-3.0.1.jar -Djoularjx.config=$JOULARJX_CONFIG -Dspring.sql.init.mode=never -Dspring.profiles.active=mysql,spring-data-jpa -Dserver.servlet.context-path=/ -Dspring.datasource.username=root -Dspring.datasource.password=petclinic"
 APP_PORT="9966"
 APP_BASE_URL="localhost:$APP_PORT"
 
@@ -166,7 +170,7 @@ start_mysql_container() {
   echo "+================================+"
   echo "| Starting MySQL Container"
   echo "+================================+"
-  mysql_container_command="docker run -d --rm -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:8"
+  mysql_container_command="docker run -d --rm -e MYSQL_ROOT_PASSWORD=petclinic -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:9.4.0"
   echo "$mysql_container_command"
   db_container_id=$(eval "$mysql_container_command")
   echo "Container ID: $db_container_id"
@@ -288,6 +292,41 @@ save_energy_measurement() {
   save_energy_measurement_command="find $APP_HOME/joularjx-result -name '*.csv' | xargs -I '{}' mv '{}' $OUTPUT_FOLDER/"
   echo "$save_energy_measurement_command"
   eval "$save_energy_measurement_command"
+
+  # Combine all call tree CSV files into one file
+  concatenate_command="find $OUTPUT_FOLDER/ -name '*all-call-trees-energy.csv' | xargs cat >> $OUTPUT_FOLDER/joularJX-all-call-trees-energy-combined.csv"
+  echo "$concatenate_command"
+  eval "$concatenate_command"
+
+  concatenate_command="find $OUTPUT_FOLDER/ -name '*filtered-call-trees-energy.csv' | xargs cat >> $OUTPUT_FOLDER/joularJX-filtered-call-trees-energy-combined.csv"
+  echo "$concatenate_command"
+  eval "$concatenate_command"
+
+  # Generate a folded stack file based on the combined call tree CSV files, remove the last delimiter (,) and replace it with a space
+  fold_command="awk -F, 'NR>1 {print \$1 \" \" \$2}' $OUTPUT_FOLDER/joularJX-all-call-trees-energy-combined.csv > $OUTPUT_FOLDER/joularJX-all-call-trees-energy-combined-folded.txt"
+  echo "$fold_command"
+  eval "$fold_command"
+
+  fold_command="awk -F, 'NR>1 {print \$1 \" \" \$2}' $OUTPUT_FOLDER/joularJX-filtered-call-trees-energy-combined.csv > $OUTPUT_FOLDER/joularJX-filtered-call-trees-energy-combined-folded.txt"
+  echo "$fold_command"
+  eval "$fold_command"
+
+  # Generate flamegraphs based on the folded stack files
+  flamegraph_command="$FLAMEGRAPH_HOME/flamegraph.pl $OUTPUT_FOLDER/joularJX-all-call-trees-energy-combined-folded.txt > $OUTPUT_FOLDER/joularJX-all-call-trees-energy-combined.svg"
+  echo "$flamegraph_command"
+  eval "$flamegraph_command"
+  rc=$?
+  if [ $rc -ne 0 ]; then
+      echo "Warning: flamegraph command failed, continuing..."
+  fi
+
+  flamegraph_command="$FLAMEGRAPH_HOME/flamegraph.pl $OUTPUT_FOLDER/joularJX-filtered-call-trees-energy-combined-folded.txt > $OUTPUT_FOLDER/joularJX-filtered-call-trees-energy-combined.svg"
+  echo "$flamegraph_command"
+  eval "$flamegraph_command"
+  rc=$?
+  if [ $rc -ne 0 ]; then
+      echo "Warning: flamegraph command failed, continuing..."
+  fi
 }
 
 extract_run_properties() {

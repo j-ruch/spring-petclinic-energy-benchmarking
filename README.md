@@ -2,6 +2,10 @@
 
 See the blog post [Evolution of Energy Usage in Spring Boot](https://medium.com/@mstocker/69c7c372dba3) for more information about this repository.
 
+## Project and Master Thesis
+
+In case you are interested in this forked project due to my project or master thesis, you can `git checkout` the respective tags: `project-thesis` and `master-thesis`.
+
 ## Running the Tests on Linux
 
 To run the tests, you can use the `run_single_measurement.sh` script. This script will run the tests for a specific Spring Boot version, JVM version, Java version, and web server. For example, to run the tests for Spring Boot 3.3.1, JVM 21.0.4-tem, Java 21, and Tomcat, you can run the following command:
@@ -88,12 +92,12 @@ cd joularjx/
 ./mvnw package
 
 cd 
-git clone https://github.com/spring-petclinic/spring-petclinic-rest.git
+git clone https://github.com/j-ruch/spring-petclinic-rest.git
 cd spring-petclinic-rest/
-git reset --hard b4c7dd5713dbaaa12742d785f1bab28e7707e186
+git reset --hard 5848de84f424c2cbfc0145f687b43f84a219e36c
 
 cd
-git clone https://github.com/misto/spring-petclinic-energy-benchmarking.git
+git clone https://github.com/j-ruch/spring-petclinic-energy-benchmarking.git
 
 curl https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz -o apache-jmeter-5.6.3.tgz
 tar -xvzf apache-jmeter-5.6.3.tgz 

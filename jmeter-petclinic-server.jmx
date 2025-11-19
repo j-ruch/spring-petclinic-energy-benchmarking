@@ -315,7 +315,7 @@
           <stringProp name="HTTPSampler.domain">${ENDPOINT_BASE}</stringProp>
           <stringProp name="HTTPSampler.port">${ENDPOINT_PORT}</stringProp>
           <stringProp name="HTTPSampler.protocol">${ENDPOINT_PROTOCOL}</stringProp>
-          <stringProp name="HTTPSampler.path">${ENDPOINT_PETS}</stringProp>
+          <stringProp name="HTTPSampler.path">${ENDPOINT_OWNERS}/${owner_id}/pets</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <stringProp name="HTTPSampler.method">POST</stringProp>
           <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
@@ -328,8 +328,7 @@
   &quot;birthDate&quot;: ${birth_date},&#xd;
   &quot;id&quot;: null,&#xd;
   &quot;name&quot;: &quot;${pet_name}&quot;,&#xd;
-  &quot;type&quot;: ${pet_type},&#xd;
-  &quot;ownerId&quot;: ${owner_id}&#xd;
+  &quot;type&quot;: ${pet_type}&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
