@@ -133,7 +133,7 @@ build_application() {
   echo "+================================+"
   build_output_file="$OUTPUT_FOLDER/log/$APP_RUN_IDENTIFIER-build.log"
 
-  BUILD_CMD="$APP_HOME/mvnw -f $APP_HOME/pom.xml clean package -Dmaven.test.skip -Dmaven.compiler.release=$java_version"
+  BUILD_CMD="$APP_HOME/mvnw -f $APP_HOME/pom.xml clean package -Dmaven.test.skip -Dmaven.compiler.release=$java_version -Pnative"
   
   app_build_command="$BUILD_CMD > $build_output_file 2>&1"
   echo "$app_build_command"
