@@ -175,6 +175,11 @@ start_mysql_container() {
   db_container_id=$(eval "$mysql_container_command")
   echo "Container ID: $db_container_id"
 
+  redis_container_command="docker run -d --rm --name redis -p 6379:6379 redis/redis-stack"
+  echo "$redis_container_command"
+  redis_container_id=$(eval "$redis_container_command")
+  echo "Container ID: $redis_container_id"
+
   # Wait until the container is ready
   echo "Waiting for MySQL container to start and initialize..."
   until docker exec -it $db_container_id mysql -uroot -ppetclinic -e "SELECT '1';" >/dev/null 2>&1; do
@@ -262,6 +267,14 @@ stop_mysql_container() {
   eval "$mysql_stop_command"
   if [ $? -ne 0 ]; then
     echo "ERROR: Failed to stop MySQL container."
+    return 1
+  fi
+
+  redis_stop_command="docker stop $redis_container_id"
+  echo "$redis_stop_command"
+  eval "$redis_stop_command"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to stop Redis container."
     return 1
   fi
 }
